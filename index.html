@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Message Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 500px;
+            position: relative;
+        }
+
+        .chart-controls {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chart-controls button {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 25px;
+            margin: 0 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .chart-controls button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .chart-controls button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .export-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .search-options {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .search-options input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .search-result-word {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .search-result-count {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .search-result-breakdown {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .top-words-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+        }
+
+        .top-words-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .top-words-options {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-words-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .top-words-options input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .top-words-dropdown {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+        }
+
+        .top-words-dropdown option {
+            padding: 10px;
+        }
+
+        .lopsided-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+        }
+
+        .lopsided-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .lopsided-column {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .lopsided-column.you {
+            border-color: rgba(59, 130, 246, 1);
+        }
+
+        .lopsided-column.them {
+            border-color: rgba(239, 68, 68, 1);
+        }
+
+        .lopsided-column h4 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .lopsided-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .lopsided-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .lopsided-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .lopsided-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .lopsided-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .lopsided-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lopsided-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .lopsided-word {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.05em;
+            margin-bottom: 4px;
+        }
+
+        .lopsided-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .lopsided-count {
+            color: #667eea;
+        }
+
+        .lopsided-percent {
+            font-weight: bold;
+        }
+
+        .you .lopsided-count {
+            color: rgba(59, 130, 246, 1);
+        }
+
+        .them .lopsided-count {
+            color: rgba(239, 68, 68, 1);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pookie Machine</h1>
+        <p class="subtitle">Your wonderful boyfriend's website</p>
+
+        <div class="upload-section">
+            <input type="file" id="fileInput" class="file-input" accept=".txt">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Choose File
+            </button>
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMessages">0</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="yourMessages">0</div>
+                    <div class="stat-label">Phil's Message Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="theirMessages">0</div>
+                    <div class="stat-label">Hilary's Message Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWords">0</div>
+                    <div class="stat-label">Total Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="yourWords">0</div>
+                    <div class="stat-label">Phil's Word Count</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="theirWords">0</div>
+                    <div class="stat-label">Hilary's Word Total</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #333;" id="chartTitle">Message Timeline</h2>
+                <div class="chart-controls">
+                    <button id="btnDay" class="active" onclick="updateChart('day')">By Day</button>
+                    <button id="btnWeek" onclick="updateChart('week')">By Week</button>
+                    <button id="btnMonth" onclick="updateChart('month')">By Month</button>
+                    <button id="btnHourly" onclick="updateChart('hourly')">Hourly</button>
+                    <button class="export-btn" onclick="exportToCSV()">Export data</button>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <h2 style="text-align: center; margin-bottom: 20px; color: #333;">Word Search</h2>
+                <input type="text" 
+                       id="searchInput" 
+                       class="search-input" 
+                       placeholder="Search for a word or phrase...">
+
+                <div class="search-options">
+                    <label>
+                        <input type="checkbox" id="exactMatchCheckbox" checked>
+                        Exact word match (uncheck for partial match)
+                    </label>
+                </div>
+
+                <div class="search-results" id="searchResults"></div>
+
+                <div class="top-words-section">
+                    <div class="top-words-header">
+                        <h3 style="margin: 0; color: #333;">Top 1000 Most Used Words</h3>
+                        <div class="top-words-options">
+                            <label>
+                                <input type="checkbox" id="ignoreCommonWordsCheckbox">
+                                Ignore common words
+                            </label>
+                        </div>
+                    </div>
+                    <select id="topWordsDropdown" class="top-words-dropdown" size="15">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <div class="lopsided-section">
+                    <h3 style="margin-bottom: 15px; color: #333; text-align: center;">Most Lopsided Words</h3>
+                    <p style="text-align: center; color: #666; margin-bottom: 15px; font-size: 0.95em;">
+                        Words each person uses disproportionately more (min. 10 uses)
+                    </p>
+                    <div class="lopsided-container">
+                        <div class="lopsided-column you">
+                            <h4>Phil's Words</h4>
+                            <div class="lopsided-list" id="yourLopsidedWords">
+                                <p style="text-align: center; color: #999;">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="lopsided-column them">
+                            <h4>Hilary's Words</h4>
+                            <div class="lopsided-list" id="theirLopsidedWords">
+                                <p style="text-align: center; color: #999;">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messages = [];
+        let chart = null;
+        let currentGrouping = 'day';
+        let currentSearchWord = '';
+        let lastChartData = null;
+
+        // Track which response times are displayed (off by default)
+        let showYourResponseTime = false;
+        let showTheirResponseTime = false;
+        let showYourWordCount = false;
+        let showTheirWordCount = false;
+        let showYouBar = true;
+        let showThemBar = true;
+
+        // Helper function to format date as YYYY-MM-DD in local time
+        function formatDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Helper function to parse date key back to Date object in local time
+        function parseDateKey(key) {
+            const [year, month, day] = key.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        // Helper function to extract words consistently (includes apostrophes)
+        function extractWords(text) {
+            const words = text.toLowerCase().match(/\b[\w']+\b/g) || [];
+            return words.map(w => w.replace(/^'+|'+$/g, '')).filter(w => w.length > 0);
+        }
+
+        // Helper function to count word occurrences using same extraction logic
+        function countWordOccurrences(text, searchWord, exactMatch) {
+            const words = extractWords(text);
+            if (exactMatch) {
+                return words.filter(w => w === searchWord.toLowerCase()).length;
+            } else {
+                return words.filter(w => w.includes(searchWord.toLowerCase())).length;
+            }
+        }
+
+        // Export chart data to CSV (Excel)
+        function exportToCSV() {
+            if (!lastChartData) {
+                alert('No chart data to export. Please generate a chart first.');
+                return;
+            }
+
+            const { labels, yourMessages, theirMessages, yourResponse, theirResponse, yourWords, theirWords } = lastChartData;
+
+            // Create CSV content
+            let csv = 'Time Period,Your Messages,Their Messages,Your Avg Response Time (min),Their Avg Response Time (min),Your Avg Words/Message,Their Avg Words/Message\n';
+
+            for (let i = 0; i < labels.length; i++) {
+                const row = [
+                    labels[i],
+                    yourMessages[i] || 0,
+                    theirMessages[i] || 0,
+                    yourResponse[i] ? yourResponse[i].toFixed(2) : '',
+                    theirResponse[i] ? theirResponse[i].toFixed(2) : '',
+                    yourWords[i] ? yourWords[i].toFixed(2) : '',
+                    theirWords[i] ? theirWords[i].toFixed(2) : ''
+                ];
+                csv += row.join(',') + '\n';
+            }
+
+            // Create blob and download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `message_analysis_${currentGrouping}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function calculateAverageWordCount(grouping) {
+            const wordCounts = { Me: {}, Them: {} };
+            const messageCounts = { Me: {}, Them: {} };
+            const MIN_ENTRIES = grouping === 'hourly' ? 100 : 0;
+
+            messages.forEach(msg => {
+                const wordCount = msg.content.trim().split(/\s+/).filter(w => w.length > 0).length;
+                let key;
+                const date = msg.timestamp;
+
+                if (grouping === 'day') {
+                    key = formatDateKey(date);
+                } else if (grouping === 'week') {
+                    const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                    key = formatDateKey(weekStart);
+                } else if (grouping === 'month') {
+                    key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                } else if (grouping === 'hourly') {
+                    const h = date.getHours();
+                    const m = Math.floor(date.getMinutes() / 15) * 15;
+                    key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                }
+
+                if (!wordCounts[msg.sender][key]) {
+                    wordCounts[msg.sender][key] = 0;
+                    messageCounts[msg.sender][key] = 0;
+                }
+
+                wordCounts[msg.sender][key] += wordCount;
+                messageCounts[msg.sender][key]++;
+            });
+
+            const avgWordCounts = { Me: {}, Them: {} };
+            for (const sender of ['Me', 'Them']) {
+                for (const key in wordCounts[sender]) {
+                    if (messageCounts[sender][key] >= MIN_ENTRIES) {
+                        avgWordCounts[sender][key] = wordCounts[sender][key] / messageCounts[sender][key];
+                    }
+                }
+            }
+
+            return avgWordCounts;
+        }
+
+        function calculateResponseTimes(grouping) {
+            const responseTimes = { Me: {}, Them: {} };
+            const responseCounts = { Me: {}, Them: {} };
+            const MIN_ENTRIES = grouping === 'hourly' ? 100 : 0;
+
+            const sortedMessages = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+
+            for (let i = 1; i < sortedMessages.length; i++) {
+                const currentMsg = sortedMessages[i];
+                const previousMsg = sortedMessages[i - 1];
+
+                if (currentMsg.sender !== previousMsg.sender) {
+                    const timeDiff = (currentMsg.timestamp - previousMsg.timestamp) / 1000 / 60;
+
+                    if (timeDiff >= 0 && timeDiff < 1440) {
+                        let key;
+                        const date = currentMsg.timestamp;
+
+                        if (grouping === 'day') {
+                            key = formatDateKey(date);
+                        } else if (grouping === 'week') {
+                            const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                            key = formatDateKey(weekStart);
+                        } else if (grouping === 'month') {
+                            key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                        } else if (grouping === 'hourly') {
+                            const h = date.getHours();
+                            const m = Math.floor(date.getMinutes() / 15) * 15;
+                            key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                        }
+
+                        if (!responseTimes[currentMsg.sender][key]) {
+                            responseTimes[currentMsg.sender][key] = 0;
+                            responseCounts[currentMsg.sender][key] = 0;
+                        }
+
+                        responseTimes[currentMsg.sender][key] += timeDiff;
+                        responseCounts[currentMsg.sender][key]++;
+                    }
+                }
+            }
+
+            const avgResponseTimes = { Me: {}, Them: {} };
+            for (const sender of ['Me', 'Them']) {
+                for (const key in responseTimes[sender]) {
+                    if (responseCounts[sender][key] >= MIN_ENTRIES) {
+                        avgResponseTimes[sender][key] = responseTimes[sender][key] / responseCounts[sender][key];
+                    }
+                }
+            }
+
+            return avgResponseTimes;
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    parseMessages(event.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function parseMessages(text) {
+            messages = [];
+            const lines = text.split('\n');
+            let currentMessage = null;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (!line || line.startsWith('Tapbacks:') || 
+                    line.startsWith('Loved by') || line.startsWith('Liked by') ||
+                    line.startsWith('Emphasized by') || line.startsWith('Questioned by') ||
+                    line.startsWith('Laughed at by') || line.startsWith('Disliked by') ||
+                    line === '⇲' || line === '⇱' ||
+                    line.startsWith('This message responded to')) {
+                    continue;
+                }
+
+                const timestampMatch = line.match(/^([A-Z][a-z]{2} \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M)/);
+
+                if (timestampMatch) {
+                    if (currentMessage && currentMessage.content) {
+                        messages.push(currentMessage);
+                    }
+
+                    const timestamp = timestampMatch[1];
+                    const date = new Date(timestamp);
+
+                    const isMine = line.includes('Me') && !line.includes('by Me');
+                    const sender = isMine ? 'Me' : 'Them';
+
+                    currentMessage = {
+                        timestamp: date,
+                        sender: sender,
+                        content: ''
+                    };
+                } else if (currentMessage) {
+                    if (!line.match(/^[A-Za-z]:\\/)) {
+                        if (currentMessage.content) {
+                            currentMessage.content += ' ';
+                        }
+                        currentMessage.content += line;
+                    }
+                }
+            }
+
+            if (currentMessage && currentMessage.content) {
+                messages.push(currentMessage);
+            }
+
+            messages = messages.filter(msg => {
+                const content = msg.content.trim();
+                return content && 
+                       !content.startsWith('[http') && 
+                       content.length > 0;
+            });
+
+            displayStatistics();
+            calculateTopWords();
+            calculateLopsidedWords();
+            updateChart('day');
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function displayStatistics() {
+            const total = messages.length;
+            const yourMessages = messages.filter(m => m.sender === 'Me').length;
+            const theirMessages = messages.filter(m => m.sender === 'Them').length;
+
+            const totalWords = messages.reduce((sum, msg) => {
+                return sum + extractWords(msg.content).length;
+            }, 0);
+
+            const yourWords = messages
+                .filter(m => m.sender === 'Me')
+                .reduce((sum, msg) => {
+                    return sum + extractWords(msg.content).length;
+                }, 0);
+
+            const theirWords = messages
+                .filter(m => m.sender === 'Them')
+                .reduce((sum, msg) => {
+                    return sum + extractWords(msg.content).length;
+                }, 0);
+
+            document.getElementById('totalMessages').textContent = total;
+            document.getElementById('yourMessages').textContent = yourMessages;
+            document.getElementById('theirMessages').textContent = theirMessages;
+            document.getElementById('totalWords').textContent = totalWords.toLocaleString();
+            document.getElementById('yourWords').textContent = yourWords.toLocaleString();
+            document.getElementById('theirWords').textContent = theirWords.toLocaleString();
+        }
+
+        function calculateTopWords() {
+            const wordCounts = {};
+            const stopWords = new Set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'was', 'are', 'been', 'has', 'had', 'were', 'said', 'did', 'having', 'may', 'am', 'u', 'ur', 'im']);
+
+            const ignoreCommonWords = document.getElementById('ignoreCommonWordsCheckbox').checked;
+
+            messages.forEach(msg => {
+                const words = extractWords(msg.content);
+                words.forEach(word => {
+                    if (word.length > 2 && (!ignoreCommonWords || !stopWords.has(word))) {
+                        wordCounts[word] = (wordCounts[word] || 0) + 1;
+                    }
+                });
+            });
+
+            const sortedWords = Object.entries(wordCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 1000);
+
+            const dropdown = document.getElementById('topWordsDropdown');
+            dropdown.innerHTML = sortedWords.map(([word, count]) => 
+                `<option value="${word}">${word} (${count} times)</option>`
+            ).join('');
+
+            dropdown.addEventListener('change', function() {
+                const selectedWord = this.value;
+                if (selectedWord) {
+                    document.getElementById('searchInput').value = selectedWord;
+                    performSearch();
+                }
+            });
+        }
+
+        function calculateLopsidedWords() {
+            const wordCountsBySender = { Me: {}, Them: {} };
+
+            messages.forEach(msg => {
+                const words = extractWords(msg.content);
+                words.forEach(word => {
+                    if (word.length > 2) {
+                        wordCountsBySender[msg.sender][word] = (wordCountsBySender[msg.sender][word] || 0) + 1;
+                    }
+                });
+            });
+
+            const wordStats = {};
+
+            for (const word in wordCountsBySender.Me) {
+                const myCount = wordCountsBySender.Me[word];
+                const theirCount = wordCountsBySender.Them[word] || 0;
+                const total = myCount + theirCount;
+
+                if (total >= 10) {
+                    wordStats[word] = {
+                        myCount: myCount,
+                        theirCount: theirCount,
+                        total: total,
+                        myPercent: (myCount / total) * 100,
+                        theirPercent: (theirCount / total) * 100
+                    };
+                }
+            }
+
+            for (const word in wordCountsBySender.Them) {
+                if (!wordStats[word]) {
+                    const theirCount = wordCountsBySender.Them[word];
+                    const myCount = wordCountsBySender.Me[word] || 0;
+                    const total = myCount + theirCount;
+
+                    if (total >= 10) {
+                        wordStats[word] = {
+                            myCount: myCount,
+                            theirCount: theirCount,
+                            total: total,
+                            myPercent: (myCount / total) * 100,
+                            theirPercent: (theirCount / total) * 100
+                        };
+                    }
+                }
+            }
+
+            const yourLopsided = Object.entries(wordStats)
+                .filter(([word, stats]) => stats.myPercent >= 60)
+                .sort((a, b) => {
+                    if (b[1].myPercent !== a[1].myPercent) {
+                        return b[1].myPercent - a[1].myPercent;
+                    }
+                    return b[1].total - a[1].total;
+                })
+                .slice(0, 1000);
+
+            const theirLopsided = Object.entries(wordStats)
+                .filter(([word, stats]) => stats.theirPercent >= 60)
+                .sort((a, b) => {
+                    if (b[1].theirPercent !== a[1].theirPercent) {
+                        return b[1].theirPercent - a[1].theirPercent;
+                    }
+                    return b[1].total - a[1].total;
+                })
+                .slice(0, 1000);
+
+            const yourListDiv = document.getElementById('yourLopsidedWords');
+            yourListDiv.innerHTML = yourLopsided.map(([word, stats]) => `
+                <div class="lopsided-item" onclick="document.getElementById('searchInput').value='${word}'; performSearch();">
+                    <div class="lopsided-word">${word}</div>
+                    <div class="lopsided-stats">
+                        <span class="lopsided-count">${stats.myCount} times</span>
+                        <span class="lopsided-percent">${stats.myPercent.toFixed(1)}% you</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const theirListDiv = document.getElementById('theirLopsidedWords');
+            theirListDiv.innerHTML = theirLopsided.map(([word, stats]) => `
+                <div class="lopsided-item" onclick="document.getElementById('searchInput').value='${word}'; performSearch();">
+                    <div class="lopsided-word">${word}</div>
+                    <div class="lopsided-stats">
+                        <span class="lopsided-count">${stats.theirCount} times</span>
+                        <span class="lopsided-percent">${stats.theirPercent.toFixed(1)}% them</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('ignoreCommonWordsCheckbox').addEventListener('change', function() {
+            calculateTopWords();
+        });
+
+        function updateChart(grouping) {
+            currentGrouping = grouping;
+
+            document.querySelectorAll('.chart-controls button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('btn' + grouping.charAt(0).toUpperCase() + grouping.slice(1)).classList.add('active');
+
+            if (currentSearchWord) {
+                renderWordFrequencyChart(currentSearchWord, grouping);
+            } else {
+                const grouped = groupMessages(grouping);
+                renderChart(grouped, grouping);
+            }
+        }
+
+        function getAllDateKeys(grouping) {
+            if (messages.length === 0) return [];
+
+            const dates = messages.map(m => m.timestamp);
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
+
+            const allKeys = [];
+            let currentDate = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+            const endDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate());
+
+            if (grouping === 'day') {
+                while (currentDate <= endDate) {
+                    allKeys.push(formatDateKey(currentDate));
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            } else if (grouping === 'week') {
+                currentDate.setDate(currentDate.getDate() - currentDate.getDay());
+                while (currentDate <= endDate) {
+                    allKeys.push(formatDateKey(currentDate));
+                    currentDate.setDate(currentDate.getDate() + 7);
+                }
+            } else if (grouping === 'month') {
+                currentDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+                while (currentDate <= endMonth) {
+                    const key = currentDate.getFullYear() + '-' + String(currentDate.getMonth() + 1).padStart(2, '0');
+                    allKeys.push(key);
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+            } else if (grouping === 'hourly') {
+                for (let h = 0; h < 24; h++) {
+                    for (let m = 0; m < 60; m += 15) {
+                        const key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                        allKeys.push(key);
+                    }
+                }
+            }
+
+            return allKeys;
+        }
+
+        function groupByHour(messages) {
+            const grouped = {};
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 15) {
+                    const key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    grouped[key] = { Me: 0, Them: 0 };
+                }
+            }
+            messages.forEach(msg => {
+                const h = msg.timestamp.getHours();
+                const m = Math.floor(msg.timestamp.getMinutes() / 15) * 15;
+                const key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                grouped[key][msg.sender]++;
+            });
+            return grouped;
+        }
+
+        function groupMessages(grouping) {
+            if (grouping === 'hourly') return groupByHour(messages);
+            const groups = {};
+
+            messages.forEach(msg => {
+                let key;
+                const date = msg.timestamp;
+
+                if (grouping === 'day') {
+                    key = formatDateKey(date);
+                } else if (grouping === 'week') {
+                    const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                    key = formatDateKey(weekStart);
+                } else if (grouping === 'month') {
+                    key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                }
+
+                if (!groups[key]) {
+                    groups[key] = { Me: 0, Them: 0 };
+                }
+                groups[key][msg.sender]++;
+            });
+
+            const allKeys = getAllDateKeys(grouping);
+            allKeys.forEach(key => {
+                if (!groups[key]) {
+                    groups[key] = { Me: 0, Them: 0 };
+                }
+            });
+
+            return groups;
+        }
+
+        function renderChart(grouped, grouping) {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+            const labels = Object.keys(grouped).sort();
+            const myData = labels.map(label => grouped[label].Me || 0);
+            const theirData = labels.map(label => grouped[label].Them || 0);
+
+            const formattedLabels = labels.map(label => {
+                if (grouping === 'hourly') {
+                    return label;
+                } else if (grouping === 'month') {
+                    const [year, month] = label.split('-').map(Number);
+                    const date = new Date(year, month - 1, 1);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                } else {
+                    const date = parseDateKey(label);
+                    if (grouping === 'day') {
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return 'Week of ' + date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }
+                }
+            });
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            document.getElementById('chartTitle').textContent = 'Message Timeline';
+
+            const responseTimes = calculateResponseTimes(grouping);
+            const wordCounts = calculateAverageWordCount(grouping);
+            const yourResponseData = labels.map(label => responseTimes.Me[label] || null);
+            const theirResponseData = labels.map(label => responseTimes.Them[label] || null);
+            const yourWordCountData = labels.map(label => wordCounts.Me[label] || null);
+            const theirWordCountData = labels.map(label => wordCounts.Them[label] || null);
+
+            // Store chart data for export
+            lastChartData = {
+                labels: formattedLabels,
+                yourMessages: myData,
+                theirMessages: theirData,
+                yourResponse: yourResponseData,
+                theirResponse: theirResponseData,
+                yourWords: yourWordCountData,
+                theirWords: theirWordCountData
+            };
+
+            const datasets = [
+                {
+                    type: 'line',
+                    label: 'Your Avg Response Time (min)',
+                    data: yourResponseData,
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y1',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: !showYourResponseTime
+                },
+                {
+                    type: 'line',
+                    label: 'Their Avg Response Time (min)',
+                    data: theirResponseData,
+                    borderColor: 'rgba(185, 28, 28, 1)',
+                    backgroundColor: 'rgba(185, 28, 28, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y1',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: !showTheirResponseTime
+                },
+                {
+                    type: 'line',
+                    label: 'Your Avg Word Count',
+                    data: yourWordCountData,
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y3',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: !showYourWordCount
+                },
+                {
+                    type: 'line',
+                    label: 'Their Avg Word Count',
+                    data: theirWordCountData,
+                    borderColor: 'rgba(249, 115, 22, 1)',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    yAxisID: 'y3',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    hidden: !showTheirWordCount
+                },
+                {
+                    type: 'bar',
+                    label: 'You',
+                    data: myData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y',
+                    hidden: !showYouBar
+                },
+                {
+                    type: 'bar',
+                    label: 'Them',
+                    data: theirData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 2,
+                    yAxisID: 'y',
+                    hidden: !showThemBar
+                }
+            ];
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: formattedLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: 2,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: 'Messages'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: showYourResponseTime || showTheirResponseTime,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Response Time (minutes)'
+                            }
+                        },
+                        y3: {
+                            type: 'linear',
+                            display: showYourWordCount || showTheirWordCount,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Avg Words/Message'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            onClick: function(e, legendItem, legend) {
+                                const label = legendItem.text;
+
+                                if (label === 'Your Avg Response Time (min)') {
+                                    showYourResponseTime = !showYourResponseTime;
+                                    updateChart(currentGrouping);
+                                } else if (label === 'Their Avg Response Time (min)') {
+                                    showTheirResponseTime = !showTheirResponseTime;
+                                    updateChart(currentGrouping);
+                                } else if (label === 'Your Avg Word Count') {
+                                    showYourWordCount = !showYourWordCount;
+                                    updateChart(currentGrouping);
+                                } else if (label === 'Their Avg Word Count') {
+                                    showTheirWordCount = !showTheirWordCount;
+                                    updateChart(currentGrouping);
+                                } else if (label === 'You') {
+                                    showYouBar = !showYouBar;
+                                    updateChart(currentGrouping);
+                                } else if (label === 'Them') {
+                                    showThemBar = !showThemBar;
+                                    updateChart(currentGrouping);
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderWordFrequencyChart(word, grouping) {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+            const exactMatch = document.getElementById('exactMatchCheckbox').checked;
+            const groups = {};
+
+            messages.forEach(msg => {
+                const count = countWordOccurrences(msg.content, word, exactMatch);
+
+                if (count > 0) {
+                    let key;
+                    const date = msg.timestamp;
+
+                    if (grouping === 'day') {
+                        key = formatDateKey(date);
+                    } else if (grouping === 'week') {
+                        const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                        key = formatDateKey(weekStart);
+                    } else if (grouping === 'month') {
+                        key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                    } else if (grouping === 'hourly') {
+                        const h = date.getHours();
+                        const m = Math.floor(date.getMinutes() / 15) * 15;
+                        key = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    }
+
+                    if (!groups[key]) {
+                        groups[key] = { Me: 0, Them: 0 };
+                    }
+
+                    groups[key][msg.sender] += count;
+                }
+            });
+
+            const allKeys = getAllDateKeys(grouping);
+            allKeys.forEach(key => {
+                if (!groups[key]) {
+                    groups[key] = { Me: 0, Them: 0 };
+                }
+            });
+
+            const labels = Object.keys(groups).sort();
+            const myData = labels.map(label => groups[label].Me || 0);
+            const theirData = labels.map(label => groups[label].Them || 0);
+
+            const formattedLabels = labels.map(label => {
+                if (grouping === 'hourly') {
+                    return label;
+                } else if (grouping === 'month') {
+                    const [year, month] = label.split('-').map(Number);
+                    const date = new Date(year, month - 1, 1);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                } else {
+                    const date = parseDateKey(label);
+                    if (grouping === 'day') {
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return 'Week of ' + date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }
+                }
+            });
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            document.getElementById('chartTitle').textContent = `Frequency of "${word}"`;
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: formattedLabels,
+                    datasets: [
+                        {
+                            label: 'You',
+                            data: myData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Them',
+                            data: theirData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: 2,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('searchResults');
+            const exactMatch = document.getElementById('exactMatchCheckbox').checked;
+
+            if (searchTerm.length === 0) {
+                resultsDiv.innerHTML = '';
+                currentSearchWord = '';
+                updateChart(currentGrouping);
+                return;
+            }
+
+            currentSearchWord = searchTerm;
+
+            let myCount = 0;
+            let theirCount = 0;
+
+            messages.forEach(msg => {
+                const count = countWordOccurrences(msg.content, searchTerm, exactMatch);
+                if (msg.sender === 'Me') {
+                    myCount += count;
+                } else {
+                    theirCount += count;
+                }
+            });
+
+            const totalCount = myCount + theirCount;
+
+            if (totalCount === 0) {
+                resultsDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No matches found</div>';
+                currentSearchWord = '';
+                updateChart(currentGrouping);
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="search-result-card">
+                        <div class="search-result-word">"${searchTerm}"</div>
+                        <div class="search-result-count">${totalCount} times</div>
+                        <div class="search-result-breakdown">
+                            You: ${myCount} | Them: ${theirCount}
+                        </div>
+                    </div>
+                `;
+                renderWordFrequencyChart(searchTerm, currentGrouping);
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', performSearch);
+        document.getElementById('exactMatchCheckbox').addEventListener('change', performSearch);
+    </script>
+</body>
+</html>
